@@ -21,6 +21,12 @@ class Edge {
         this.weight = this.rand.nextInt();
     }
     
+    Edge(Node from, Node to, int weight) {
+        this.from = from;
+        this.to = to;
+        this.weight = weight;
+    }
+    
     
 }
 

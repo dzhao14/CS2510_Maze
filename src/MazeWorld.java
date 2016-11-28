@@ -6,9 +6,14 @@
 //kcarr
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+
 import tester.*;
 import javalib.impworld.*;
 import java.awt.Color;
+import java.lang.reflect.Array;
+
 import javalib.worldimages.*;
 
 // Represents a maze
@@ -17,11 +22,18 @@ class MazeWorld extends World {
     // the total height of the maze in pixels 
     static final int HEIGHT = 60;
     // the total width of the maze in pixels
-    static final int WIDTH = 60;
+    static final int WIDTH = 100;
     
     //A list of nodes that represent the maze
     ArrayList<Node> board;
     
+    MazeWorld() {
+        this.createMaze();
+    }
+    
+    MazeWorld(boolean b) {
+        
+    }
     
     // create an table of unconnected nodes
     ArrayList<ArrayList<Node>> createNodeTable() {
@@ -63,72 +75,129 @@ class MazeWorld extends World {
                 }
             }
         }
-        return this.sortEdgeHelp(l);
+        int size = l.size();
+        ArrayList<Edge> out = new ArrayList<Edge>();
+        for (int i = 0 ; i < size ; i++) {
+            out.add(this.minimum(l));
+        }
+        
+        return out;
+        
     }
     
-    // merge sort this list of edges
-    ArrayList<Edge> sortEdgeHelp(ArrayList<Edge> l) {
-        if (l.size() == 0 || l.size() == 1) {
-            return l;
+    // Returns the edge with the smallest weight
+    // EFFECT: removes the smallest weight edge from the list 
+    Edge minimum(ArrayList<Edge> l) {
+        if (l.size() == 0) {
+            throw new RuntimeException("Can't get min of empty list");
         }
         else {
-            ArrayList<Edge> temp = new ArrayList<Edge>();
+            int min = 0;
             for (int i = 0 ; i < l.size() ; i++) {
-                temp.add(l.get(i));
+                if (l.get(i).weight < l.get(min).weight) {
+                    min = i;
+                }
             }
-            
-            return this.merge(this.sortEdgeHelp(this.splitLeft(temp)), 
-                    this.sortEdgeHelp(this.splitRight(temp)),
-                    new ArrayList<Edge>());
+            return l.remove(min);
         }
     }
     
-    // get the left half of a given list of Edges
-    ArrayList<Edge> splitLeft(ArrayList<Edge> l) {
+    // create a minimum spanning tree from the given sorted list of edges
+    ArrayList<Edge> createMinSpanningTree(ArrayList<Edge> l, ArrayList<ArrayList<Node>> table) {
+        HashMap<Node, Node> representatives = new HashMap<Node, Node>();
+        for (int x = 0 ; x < MazeWorld.WIDTH ; x++) {
+            for (int y = 0 ; y < MazeWorld.HEIGHT ; y++) {
+                representatives.put(table.get(x).get(y), table.get(x).get(y));
+            }
+        }
+        
         ArrayList<Edge> out = new ArrayList<Edge>();
-        int mid = l.size() / 2;
-        for (int i = 0 ; i < mid ; i++) {
-            out.add(l.get(i));
-        }
-        return out;
-    }
-    
-    // get the left half of a given list of Edges
-    ArrayList<Edge> splitRight(ArrayList<Edge> l) {
-        ArrayList<Edge> out = new ArrayList<Edge>();
-        int mid = l.size() / 2;
-        for (int i = mid ; i < l.size() ; i++) {
-            out.add(l.get(i));
-        }
-        return out;
-    }
-    
-    // merge two sorted list of edges into a sorted list of edges
-    ArrayList<Edge> merge(ArrayList<Edge> l1, ArrayList<Edge> l2, ArrayList<Edge> acc) {
-        if (l1.size() == 0) {
-            acc.addAll(l2);
-            return acc;
-        }
-        else if (l2.size() == 0) {
-            return acc;
-        }
-        else {
-            if (l1.get(0).weight > l2.get(0).weight) {
-                acc.add(l2.get(0));
-                l2.remove(0);
-                return this.merge(l1, l2, acc);
+        
+        while (!this.spanningTreeDone(representatives)) {
+            Edge e = l.get(0);
+            if (representatives.get(e.from) == representatives.get(e.to)) {
+                l.remove(0);
             }
             else {
-                acc.add(l1.get(0));
-                l1.remove(0);
-                return this.merge(l1, l2, acc);
-            }            
+                out.add(e);
+                this.union(representatives, e);
+                l.remove(0);
+            }
         }
+        return out;
+    }
+    
+    // check if this spanning tree is complete
+    boolean spanningTreeDone(HashMap<Node, Node> map) {
+        Collection<Node> c = map.values();
+        ArrayList<Node> ln = new ArrayList<Node>();
+        for (Node n : c) {
+            ln.add(n);
+        }
+        Node n0 = ln.get(0);
+        int size = ln.size();
+        for (int i = 0 ; i < size ; i++) {
+            if (ln.get(0) == n0) {
+                ln.remove(0);
+            }
+            else {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    // update the hashmap once a connection between two nodes is made
+    void union(HashMap<Node, Node> map, Edge e) {
+        Node head = map.get(e.from);
+        Node otherHead = map.get(e.to);
+        for (Node key : map.keySet()) {
+            if (map.get(key) == otherHead) {
+                map.put(key, head);
+            }
+        }
+    }
+    
+    // create a table of nodes that represent the maze
+    // EFFECT: assign the this.board field
+    void createMaze() {
+        ArrayList<ArrayList<Node>> table = this.linkNodeTable(this.createNodeTable());
+        ArrayList<Edge> sortedEdges = this.sortEdges(table);
+        ArrayList<Edge> spanningTreeEdges = this.createMinSpanningTree(sortedEdges, table);
+        this.board = this.updateNodeEdges(table, spanningTreeEdges);
+    }
+    
+    ArrayList<Node> updateNodeEdges(ArrayList<ArrayList<Node>> table, ArrayList<Edge> edges) {
+        for (int x = 0 ; x < MazeWorld.WIDTH ; x++) {
+            for (int y = 0 ; y < MazeWorld.HEIGHT ; y++) {
+                table.get(x).get(y).edges = new ArrayList<Edge>();
+            }
+        }
+        for (Edge e : edges) {
+            table.get(e.from.x).get(e.from.y).edges.add(e);
+            table.get(e.to.x).get(e.to.y).edges.add(new Edge(e.to, e.from, e.weight));
+        }
+        return this.table2List(table);
+    }
+    
+    ArrayList<Node> table2List(ArrayList<ArrayList<Node>> table) {
+        ArrayList<Node> list = new ArrayList<Node>();
+        for (int x = 0 ; x < MazeWorld.WIDTH ; x++) {
+            for (int y = 0 ; y < MazeWorld.HEIGHT ; y++) {
+                list.add(table.get(x).get(y));
+            }
+        }
+        return list;
     }
     
     // stub for makescene
     public WorldScene makeScene() {
-        return new WorldScene(100, 100);
+        WorldScene bg = new WorldScene(MazeWorld.WIDTH * Node.CELL_SIZE, 
+                MazeWorld.HEIGHT * Node.CELL_SIZE);
+        for (Node n : this.board) {
+            n.drawNode(bg);
+        }
+        return bg;
     }
     
 }
