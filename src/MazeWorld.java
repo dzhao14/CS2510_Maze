@@ -167,6 +167,8 @@ class MazeWorld extends World {
         this.board = this.updateNodeEdges(table, spanningTreeEdges);
     }
     
+    // resets each node's edges field to now contain the only edges that properly represent
+    // the created maze
     ArrayList<Node> updateNodeEdges(ArrayList<ArrayList<Node>> table, ArrayList<Edge> edges) {
         for (int x = 0 ; x < MazeWorld.WIDTH ; x++) {
             for (int y = 0 ; y < MazeWorld.HEIGHT ; y++) {
@@ -180,6 +182,7 @@ class MazeWorld extends World {
         return this.table2List(table);
     }
     
+    // Turns a table of nodes into an arraylist of nodes
     ArrayList<Node> table2List(ArrayList<ArrayList<Node>> table) {
         ArrayList<Node> list = new ArrayList<Node>();
         for (int x = 0 ; x < MazeWorld.WIDTH ; x++) {
