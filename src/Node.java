@@ -5,8 +5,9 @@
 //Carr, Kenneth "Theo"
 //kcarr
 
+// TO GENERATE MAZE: uncomment big-bang at the bottom of the Examples class
+
 import java.util.ArrayList;
-import tester.*;
 import javalib.impworld.*;
 import java.awt.Color;
 import javalib.worldimages.*;
@@ -18,7 +19,9 @@ class Node {
     int x;
     int y;
     //Represents this node's edges
-    ArrayList<Edge> edges = new ArrayList<Edge>();    
+    ArrayList<Edge> edges = new ArrayList<Edge>();
+    // has this node been visited?
+    boolean seen = false;
     
     Node(int x, int y) {
         this.x = x;

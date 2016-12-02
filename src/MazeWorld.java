@@ -5,34 +5,39 @@
 //Carr, Kenneth "Theo"
 //kcarr
 
+// TO GENERATE MAZE: uncomment big-bang at the bottom of the Examples class
+
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashMap;
 
-import tester.*;
 import javalib.impworld.*;
-import java.awt.Color;
-import java.lang.reflect.Array;
 
-import javalib.worldimages.*;
 
 // Represents a maze
 class MazeWorld extends World {
     
     // the total height of the maze in pixels 
-    static final int HEIGHT = 60;
+    static final int HEIGHT = 10;
     // the total width of the maze in pixels
-    static final int WIDTH = 100;
+    static final int WIDTH = 10;
     
     //A list of nodes that represent the maze
     ArrayList<Node> board;
     
+    //Stores the player for this maze
+    Player player;
+    
     MazeWorld() {
         this.createMaze();
+        this.createPlayer();
     }
     
+    // Testing constructor
     MazeWorld(boolean b) {
-        
+        // this constructor is used for testing, to avoid generating a new maze each time
     }
     
     // create an table of unconnected nodes
@@ -82,8 +87,9 @@ class MazeWorld extends World {
         }
         
         return out;
-        
     }
+    
+
     
     // Returns the edge with the smallest weight
     // EFFECT: removes the smallest weight edge from the list 
@@ -136,7 +142,7 @@ class MazeWorld extends World {
         }
         Node n0 = ln.get(0);
         int size = ln.size();
-        for (int i = 0 ; i < size ; i++) {
+        for (int i = 0 ; i < size; i++) {
             if (ln.get(0) == n0) {
                 ln.remove(0);
             }
@@ -193,19 +199,160 @@ class MazeWorld extends World {
         return list;
     }
     
-    // stub for makescene
+    //Create a player. Assumes that the board has already been created
+    void createPlayer() {
+        this.player = new Player(this.board.get(0));
+    }
+    
+    //Move the player up. Assumes the player can move up
+    void movePlayerUp() {
+        this.player.on = this.board.get(this.player.x * MazeWorld.HEIGHT + this.player.y - 1);
+        this.player.y = this.player.y - 1;
+    }
+    
+    //Move the player down. Assumes the player can move down
+    void movePlayerDown() {
+        this.player.on = this.board.get(this.player.x * MazeWorld.HEIGHT + this.player.y + 1);
+        this.player.y = this.player.y + 1;
+    }
+    
+    //Move the player left. Assumes the player can move left
+    void movePlayerLeft() {
+        this.player.on = this.board.get((this.player.x - 1) * MazeWorld.HEIGHT + this.player.y);
+        this.player.x = this.player.x - 1;
+    }
+    
+    //Move the player right. Assumes the player can move right
+    void movePlayerRight() {
+        this.player.on = this.board.get((this.player.x + 1) * MazeWorld.HEIGHT + this.player.y);
+        this.player.x = this.player.x + 1;
+    }
+    
+    //Search the graph
+    boolean graphSearch(Node n, GraphTraverseType<Node> func) {
+        Deque<Node> wl = new ArrayDeque<Node>();
+        ArrayList<Node> seen = new ArrayList<Node>();
+        func.add(wl, n);
+        
+        while (wl.size() != 0) {
+            Node cur = func.remove(wl);
+            if (cur.x == MazeWorld.WIDTH - 1 && cur.y == MazeWorld.HEIGHT - 1) {
+                return true;
+            }
+            
+            if (seen.contains(cur)) {
+                
+            }
+            else {
+                for (Edge e : cur.edges) {
+                    func.add(wl, e.to);
+                }
+                seen.add(cur);
+            }
+        }
+        return false;
+        
+    }
+    
+    // Render the game
     public WorldScene makeScene() {
         WorldScene bg = new WorldScene(MazeWorld.WIDTH * Node.CELL_SIZE, 
                 MazeWorld.HEIGHT * Node.CELL_SIZE);
         for (Node n : this.board) {
             n.drawNode(bg);
         }
+        if (player != null) {
+            this.player.drawPlayer(bg);
+        }
+
         return bg;
+    }
+    
+    // onTick
+    public void onTick() {
+        if (this.player.hasPlayerWon()) {
+            this.onKeyEvent("r");
+        }
+    }
+    
+    // onKey
+    public void onKeyEvent(String ke) {
+        if (ke.equals("r")) {
+            this.createMaze();
+            this.createPlayer();
+        }
+        else if (ke.equals("left")) {
+            if (this.player.canMoveLeft()) {
+                this.movePlayerLeft();
+            }
+        }
+        else if (ke.equals("right")) {
+            if (this.player.canMoveRight()) {
+                this.movePlayerRight();
+            }
+        }
+        else if (ke.equals("down")) {
+            if (this.player.canMoveDown()) {
+                this.movePlayerDown();
+            }
+        }
+        else if (ke.equals("up")) {
+            if (this.player.canMoveUp()) {
+                this.movePlayerUp();
+            }
+        }
+        else if (ke.equals("b")) {
+            if (this.graphSearch(this.board.get(0), new BFS<Node>())) {
+                System.out.println("BooYeah!");
+            }
+        }
+        else if (ke.equals("d")) {
+            if (this.graphSearch(this.board.get(0), new DFS<Node>())) {
+                System.out.println("BooYeah! DFS");
+            }
+        }
+        else {
+            return ;
+        }
     }
     
 }
 
+// Represents the interface for graph traversing function objects
+interface GraphTraverseType<T> {
+    
+    // Add an item to the worklist
+    void add(Deque<T> wl, T item);
+    // Remove an item from the worklist
+    T remove(Deque<T> wl);
+}
 
+// Represents the function object for bfs
+class BFS<T> implements GraphTraverseType<T> {
+    
+    // Add an item to the worklist
+    public void add(Deque<T> wl, T item) {
+        wl.addFirst(item);
+    }
+    
+    // Remove an item from the worklist
+    public T remove(Deque<T> wl) {
+        return wl.removeLast();
+    }
+}
+
+class DFS<T> implements GraphTraverseType<T> {
+    
+    // Add an item to the worklist
+    public void add(Deque<T> wl, T item) {
+        wl.addFirst(item);
+    }
+    
+    // Remove an item from the worklist
+    public T remove(Deque<T> wl) {
+        return wl.removeFirst();
+    }
+}
 
 
 
