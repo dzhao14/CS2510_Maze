@@ -97,18 +97,6 @@ public class Examples {
         for (int i = 1 ; i < l.size(); i++) {
             t.checkExpect(l.get(i - 1).weight <= l.get(i).weight, true);
         }
-        t.checkNumRange(l.size(), MazeWorld.WIDTH * MazeWorld.HEIGHT, 
-                MazeWorld.HEIGHT * MazeWorld.WIDTH * 2);
-        t.checkExpect(this.mw.minimum(this.el0), this.e0);
-        t.checkExpect(this.mw.minimum(this.el1), this.e0);
-    }
-    
-    // test minimum
-    void testMinimum(Tester t) {
-        this.init();
-        t.checkExpect(this.mw.minimum(this.el0), this.e0);
-        t.checkException(new RuntimeException("Can't get min of empty list"),
-                this.mw, "minimum", new ArrayList<Edge>());
     }
     
     // test createMinSpanningTree and its helpers
@@ -118,13 +106,6 @@ public class Examples {
         ArrayList<Edge> sortedEdges = this.mw.sortEdges(table);
         ArrayList<Edge> out = this.mw.createMinSpanningTree(sortedEdges, table);
         t.checkExpect(out.size(), MazeWorld.WIDTH * MazeWorld.HEIGHT - 1);
-    }
-    
-    // test spanningTreeDone
-    void testSpanningTreeDone(Tester t) {
-        this.init();
-        t.checkExpect(this.mw.spanningTreeDone(hash1), false);
-        t.checkExpect(this.mw.spanningTreeDone(hash2), true);
     }
     
     // test createMaze
@@ -139,30 +120,30 @@ public class Examples {
     
     // test union
     void testUnion(Tester t) {
-        this.init();
-        this.mw.createMaze();
-        ArrayList<Node> ln = new ArrayList<Node>();
-        for (Node c : this.hash1.values()) {
-            ln.add(c);
-        }
-        t.checkExpect(ln.contains(this.n0), true);
-        t.checkExpect(ln.contains(this.n1), true);
-        t.checkExpect(ln.contains(this.n2), true);
-        
-        this.init();
-        this.mw.union(this.hash1, this.e0);
-        ln = new ArrayList<Node>();
-        for (Node c : this.hash1.values()) {
-            ln.add(c);
-        }
-        t.checkExpect(ln.contains(this.n1), false);
-        
-        this.mw.union(this.hash1, this.e1);
-        ln = new ArrayList<Node>();
-        for (Node c : this.hash1.values()) {
-            ln.add(c);
-        }
-        t.checkExpect(ln.contains(this.n2), false);
+//        this.init();
+//        this.mw.createMaze();
+//        ArrayList<Node> ln = new ArrayList<Node>();
+//        for (Node c : this.hash1.values()) {
+//            ln.add(c);
+//        }
+//        t.checkExpect(ln.contains(this.n0), true);
+//        t.checkExpect(ln.contains(this.n1), true);
+//        t.checkExpect(ln.contains(this.n2), true);
+//        
+//        this.init();
+//        this.mw.union(this.hash1, this.e0);
+//        ln = new ArrayList<Node>();
+//        for (Node c : this.hash1.values()) {
+//            ln.add(c);
+//        }
+//        t.checkExpect(ln.contains(this.n1), false);
+//        
+//        this.mw.union(this.hash1, this.e1);
+//        ln = new ArrayList<Node>();
+//        for (Node c : this.hash1.values()) {
+//            ln.add(c);
+//        }
+//        t.checkExpect(ln.contains(this.n2), false);
     }
     
     
@@ -263,127 +244,11 @@ public class Examples {
     }
     
     
-    // Methods below designed to test HeapSort Algorithm to be used in Part II
-//    ArrayList<Integer> l;
-//    Utils u = new Utils();
-//    IComparator<Edge> comp = new CompEdge();
-//    IComparator<Integer> numComp = new NumComp();
-    
-
-//    // another initializer
-//    void init2() {
-//        this.l = new ArrayList<Integer>();
-//        this.u = new Utils();
-//    }
-//    
-//    // test swap
-//    void testSwap(Tester t) {
-//        this.init2();
-//        for(int i = 0; i < 6; i++) {
-//            l.add(i);
-//        }
-//        t.checkExpect(l.get(2), 2);
-//        t.checkExpect(l.get(5), 5);
-//        this.u.swap(2, 5, l);
-//        t.checkExpect(l.get(2), 5);
-//        t.checkExpect(l.get(5), 2);
-//    }
-//    
-//    // test downHeap
-//    void testDownHeap(Tester t) {
-//        this.init2();
-//        this.l.add(7);
-//        this.l.add(8);
-//        this.l.add(6);
-//        this.l.add(4);
-//        this.l.add(9);
-//        this.l.add(3);
-//        t.checkExpect(l.get(0), 7);
-//        t.checkExpect(l.get(1), 8);
-//        t.checkExpect(l.get(4), 9);
-//        this.u.downHeap(0, l.size(), l, this.numComp);
-//        t.checkExpect(l.get(0), 8);
-//        t.checkExpect(l.get(1), 9);
-//        t.checkExpect(l.get(2), 6);
-//        t.checkExpect(l.get(3), 4);
-//        t.checkExpect(l.get(4), 7);
-//        t.checkExpect(l.get(5), 3);
-//    }
-//    
-//    // test buildHeap
-//    void testBuildHeap(Tester t) {
-//        this.init2();
-//        this.l.add(7);
-//        this.l.add(8);
-//        this.l.add(6);
-//        this.l.add(4);
-//        this.l.add(9);
-//        this.l.add(3);
-//        t.checkExpect(l.get(0), 7);
-//        t.checkExpect(l.get(1), 8);
-//        t.checkExpect(l.get(4), 9);
-//        u.buildHeap(l, this.numComp);
-//        t.checkExpect(l.get(0), 9);
-//        t.checkExpect(l.get(1), 8);
-//        t.checkExpect(l.get(2), 6);
-//        t.checkExpect(l.get(3), 4);
-//        t.checkExpect(l.get(4), 7);
-//        t.checkExpect(l.get(5), 3);
-//    }
-//    
-//    // test orderHeap
-//    void testOrderHeap(Tester t) {
-//        this.init();
-//        this.init2();
-//      this.l.add(7);
-//      this.l.add(8);
-//      this.l.add(6);
-//      this.l.add(4);
-//      this.l.add(9);
-//      this.l.add(3);
-//      u.buildHeap(l, numComp);
-//      t.checkExpect(l.get(0), 9);
-//      t.checkExpect(l.get(1), 8);
-//      t.checkExpect(l.get(2), 6);
-//      t.checkExpect(l.get(3), 4);
-//      t.checkExpect(l.get(4), 7);
-//      t.checkExpect(l.get(5), 3);
-//      u.orderHeap(l, numComp);
-//      t.checkExpect(l.get(0), 3);
-//      t.checkExpect(l.get(1), 4);
-//      t.checkExpect(l.get(2), 6);
-//      t.checkExpect(l.get(3), 7);
-//      t.checkExpect(l.get(4), 8);
-//      t.checkExpect(l.get(5), 9);
-//    }
-//
-//    
-//    // test heapSort
-//    void testHeapSort(Tester t) {
-//        this.init2();
-//        this.l.add(7);
-//        this.l.add(8);
-//        this.l.add(6);
-//        this.l.add(4);
-//        this.l.add(9);
-//        this.l.add(3);
-//        t.checkExpect(l.get(0), 7);
-//        t.checkExpect(l.get(1), 8);
-//        t.checkExpect(l.get(4), 9);
-//        t.checkExpect(u.heapSort(l, numComp).get(0), 3);
-//        t.checkExpect(u.heapSort(l, numComp).get(1), 4);
-//        t.checkExpect(u.heapSort(l, numComp).get(2), 6);
-//        t.checkExpect(u.heapSort(l, numComp).get(3), 7);
-//        t.checkExpect(u.heapSort(l, numComp).get(4), 8);
-//        t.checkExpect(u.heapSort(l, numComp).get(5), 9);
-//    }
-    
-    
     // Test the game
     void testGame(Tester t) {
         MazeWorld mz = new MazeWorld();
         mz.bigBang((MazeWorld.WIDTH) * Node.CELL_SIZE, 
-                (MazeWorld.HEIGHT) * Node.CELL_SIZE, 1);
+                (MazeWorld.HEIGHT) * Node.CELL_SIZE, .1);
     }
 }
 //

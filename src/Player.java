@@ -1,7 +1,4 @@
 import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import javalib.worldimages.*;
 import javalib.impworld.*;
 

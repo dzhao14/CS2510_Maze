@@ -22,6 +22,10 @@ class Node {
     ArrayList<Edge> edges = new ArrayList<Edge>();
     // has this node been visited?
     boolean seen = false;
+    // is this node a part of the solution to the maze?
+    boolean solution = false;
+    // is this cell's color supposed to be hidden (revert to default color)
+    boolean isHidden = false;
     
     Node(int x, int y) {
         this.x = x;
@@ -30,9 +34,11 @@ class Node {
     
     //Draw the node on the given background
     void drawNode(WorldScene bg) {
-        bg.placeImageXY(this.determineRect(),
-                this.x * Node.CELL_SIZE + Node.CELL_SIZE / 2, 
-                this.y * Node.CELL_SIZE + Node.CELL_SIZE / 2);
+        if (!this.isHidden) {
+            bg.placeImageXY(this.determineRect(),
+                    this.x * Node.CELL_SIZE + Node.CELL_SIZE / 2, 
+                    this.y * Node.CELL_SIZE + Node.CELL_SIZE / 2);
+        }
         bg.placeImageXY(new RectangleImage(Node.CELL_SIZE, Node.CELL_SIZE, 
                 OutlineMode.OUTLINE, Color.BLACK), 
                 this.x * Node.CELL_SIZE + Node.CELL_SIZE / 2, 
@@ -65,6 +71,14 @@ class Node {
         else if (this.x == MazeWorld.WIDTH - 1 && this.y == MazeWorld.HEIGHT - 1) {
             return new RectangleImage(Node.CELL_SIZE, Node.CELL_SIZE, 
                     OutlineMode.SOLID, Color.GREEN);
+        }
+        else if (this.solution) {
+            return new RectangleImage(Node.CELL_SIZE, Node.CELL_SIZE, OutlineMode.SOLID,
+                    Color.PINK);
+        }
+        else if (this.seen) {
+            return new RectangleImage(Node.CELL_SIZE, Node.CELL_SIZE, OutlineMode.SOLID,
+                    Color.CYAN);
         }
         else {
             return new RectangleImage(Node.CELL_SIZE, Node.CELL_SIZE, 

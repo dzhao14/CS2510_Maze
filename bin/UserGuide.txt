@@ -1,0 +1,40 @@
+After running the game a maze will appear!
+
+How to win:
+
+Method 1: Use the arrow keys to move the player (red circle) through the maze. The goal is to move the player to the green 
+square at the bottom left of the screen.
+
+Method 2: Pressing either the 'b' key or 'd' key will cause the computer to start automatically solving the maze.
+After pressing 'b' or 'd' your player will be moved back to the starting square and your player will not be allowed to 
+move while the computer is solving the maze. The game is over when the computer solves the maze.
+Pressing 'b' starts breadth first search.
+Pressing 'd' starts depth first search.
+
+Upon winning the game (using either method) a score screen will pop up stating the total number of moves and the number of 
+wrong moves made during this solution. To hide the score screen press 'j'.
+
+After pressing 'j' you'll see that the solution path is colored in pink.
+
+How to play again:
+
+During any point in the game press 'r' and a new maze of the same size will appear.
+
+Notes:
+
+Whenever a square is colored in cyan it means that the square has been visited.
+When the player is solving the maze, backtracking doesn't affect the total moves counter!
+  Therefore total moves is calculated by adding up the number of squares visited during the game. Visiting a square won't
+  add to the counter.
+
+Press 'h' will toggle all squares betwee their original color (white) and their acquired color throughout the game.
+
+How to change the maze size:
+
+If you want a harder or easier maze:
+Go into MazeWorld.java and change the two constants, HEIGHT and WIDTH. Changing these constants will make your maze 
+larger or smaller
+
+If you want to scale the size of your maze:
+Go into Node.java and change the constant CELL_SIZE. Changing this constant will scale your maze into a larger or smaller
+maze.

@@ -1,19 +1,12 @@
-//CS2510 Fall 2016
-//Assignment 11
-//Zhao, David
-//dzhao
-//Carr, Kenneth "Theo"
-//kcarr
-
-// TO GENERATE MAZE: uncomment big-bang at the bottom of the Examples class
-
+import java.awt.Color;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
-
 import javalib.impworld.*;
+import javalib.worldimages.OutlineMode;
+import javalib.worldimages.RectangleImage;
+import javalib.worldimages.TextImage;
 
 
 // Represents a maze
@@ -29,6 +22,22 @@ class MazeWorld extends World {
     
     //Stores the player for this maze
     Player player;
+    // Stores the worklist for graph searching
+    Deque<Node> wl = new ArrayDeque<Node>();
+    // Stores the seen list for graph searching
+    ArrayList<Node> seen = new ArrayList<Node>();
+    // Stores the function object for graph searching
+    GraphTraverseType<Node> func = new DFS<Node>();
+    // Stores whether the maze has been solved AND the solution path has been shown
+    boolean gameStop = false;
+    // Stores the number of wrong moves taken during this game. Going over the same wrong square more than
+    // once doesn't add to this score.
+    int wrongMoves = 0;
+    // Stores the number of right moves taken during this game to solve the maze. Going over the same right square
+    // more than once won't add to this score.
+    int rightMoves = 0;
+    // Stores whether or not to show the score screen when the maze is finished
+    boolean showScore = false;
     
     MazeWorld() {
         this.createMaze();
@@ -38,6 +47,17 @@ class MazeWorld extends World {
     // Testing constructor
     MazeWorld(boolean b) {
         // this constructor is used for testing, to avoid generating a new maze each time
+    }
+    
+    void reset() {
+        this.createMaze();
+        this.player = new Player(this.board.get(0));
+        this.wl = new ArrayDeque<Node>();
+        this.seen = new ArrayList<Node>();
+        this.gameStop = false;
+        this.wrongMoves = 0;
+        this.rightMoves = 0;
+        this.showScore = false;
     }
     
     // create an table of unconnected nodes
@@ -64,7 +84,7 @@ class MazeWorld extends World {
                 if (y != MazeWorld.HEIGHT - 1) {
                     table.get(x).get(y).edges.add(new Edge(table.get(x).get(y), 
                             table.get(x).get(y + 1)));
-                }            
+                }        
             }
         }
         return table;
@@ -80,88 +100,51 @@ class MazeWorld extends World {
                 }
             }
         }
-        int size = l.size();
-        ArrayList<Edge> out = new ArrayList<Edge>();
-        for (int i = 0 ; i < size ; i++) {
-            out.add(this.minimum(l));
-        }
         
-        return out;
-    }
-    
-
-    
-    // Returns the edge with the smallest weight
-    // EFFECT: removes the smallest weight edge from the list 
-    Edge minimum(ArrayList<Edge> l) {
-        if (l.size() == 0) {
-            throw new RuntimeException("Can't get min of empty list");
-        }
-        else {
-            int min = 0;
-            for (int i = 0 ; i < l.size() ; i++) {
-                if (l.get(i).weight < l.get(min).weight) {
-                    min = i;
-                }
-            }
-            return l.remove(min);
-        }
+        HeapSort<Edge> hSort = new HeapSort<Edge>();
+        hSort.heapSort(l, new CompareEdges());
+        return l;
+        
     }
     
     // create a minimum spanning tree from the given sorted list of edges
     ArrayList<Edge> createMinSpanningTree(ArrayList<Edge> l, ArrayList<ArrayList<Node>> table) {
-        HashMap<Node, Node> representatives = new HashMap<Node, Node>();
+        HashMap<Node, Node> map = new HashMap<Node, Node>();
         for (int x = 0 ; x < MazeWorld.WIDTH ; x++) {
             for (int y = 0 ; y < MazeWorld.HEIGHT ; y++) {
-                representatives.put(table.get(x).get(y), table.get(x).get(y));
+                map.put(table.get(x).get(y), table.get(x).get(y));
             }
         }
         
         ArrayList<Edge> out = new ArrayList<Edge>();
         
-        while (!this.spanningTreeDone(representatives)) {
+        while (out.size() < MazeWorld.WIDTH * MazeWorld.HEIGHT - 1) {
             Edge e = l.get(0);
-            if (representatives.get(e.from) == representatives.get(e.to)) {
+            if (this.determineHead(map, e.to) == this.determineHead(map, e.from)) {
                 l.remove(0);
             }
             else {
                 out.add(e);
-                this.union(representatives, e);
+                this.union(map, e);
                 l.remove(0);
             }
         }
         return out;
     }
     
-    // check if this spanning tree is complete
-    boolean spanningTreeDone(HashMap<Node, Node> map) {
-        Collection<Node> c = map.values();
-        ArrayList<Node> ln = new ArrayList<Node>();
-        for (Node n : c) {
-            ln.add(n);
-        }
-        Node n0 = ln.get(0);
-        int size = ln.size();
-        for (int i = 0 ; i < size; i++) {
-            if (ln.get(0) == n0) {
-                ln.remove(0);
-            }
-            else {
-                return false;
-            }
-        }
-        return true;
-    }
-    
     // update the hashmap once a connection between two nodes is made
     void union(HashMap<Node, Node> map, Edge e) {
-        Node head = map.get(e.from);
-        Node otherHead = map.get(e.to);
-        for (Node key : map.keySet()) {
-            if (map.get(key) == otherHead) {
-                map.put(key, head);
-            }
+        map.put(this.determineHead(map, e.to), map.get(e.from));
+    }
+    
+    // determine the head of the group in this hasmap given a node in the hashmap
+    Node determineHead(HashMap<Node, Node> map, Node n) {
+        Node val = map.get(n);
+        while (val != n) {
+            n = val;
+            val = map.get(n);
         }
+        return n;
     }
     
     // create a table of nodes that represent the maze
@@ -206,52 +189,164 @@ class MazeWorld extends World {
     
     //Move the player up. Assumes the player can move up
     void movePlayerUp() {
-        this.player.on = this.board.get(this.player.x * MazeWorld.HEIGHT + this.player.y - 1);
-        this.player.y = this.player.y - 1;
+        if (this.wl.size() == 0) {
+            this.player.on = this.board.get(this.player.x * MazeWorld.HEIGHT + this.player.y - 1);
+            this.player.y = this.player.y - 1;
+            this.player.on.seen = true;
+            if (!this.seen.contains(this.player.on)) {
+                this.seen.add(this.player.on);
+            }
+        }
     }
     
     //Move the player down. Assumes the player can move down
     void movePlayerDown() {
-        this.player.on = this.board.get(this.player.x * MazeWorld.HEIGHT + this.player.y + 1);
-        this.player.y = this.player.y + 1;
+        if (this.wl.size() == 0) {
+            this.player.on = this.board.get(this.player.x * MazeWorld.HEIGHT + this.player.y + 1);
+            this.player.y = this.player.y + 1;
+            this.player.on.seen = true;
+            if (!this.seen.contains(this.player.on)) {
+                this.seen.add(this.player.on);
+            }
+        }
     }
     
     //Move the player left. Assumes the player can move left
     void movePlayerLeft() {
-        this.player.on = this.board.get((this.player.x - 1) * MazeWorld.HEIGHT + this.player.y);
-        this.player.x = this.player.x - 1;
+        if (this.wl.size() == 0) {
+            this.player.on = this.board.get((this.player.x - 1) * MazeWorld.HEIGHT + this.player.y);
+            this.player.x = this.player.x - 1;
+            this.player.on.seen = true;
+            if (!this.seen.contains(this.player.on)) {
+                this.seen.add(this.player.on);
+            }
+        }
     }
     
     //Move the player right. Assumes the player can move right
     void movePlayerRight() {
-        this.player.on = this.board.get((this.player.x + 1) * MazeWorld.HEIGHT + this.player.y);
-        this.player.x = this.player.x + 1;
+        if (this.wl.size() == 0) {
+            this.player.on = this.board.get((this.player.x + 1) * MazeWorld.HEIGHT + this.player.y);
+            this.player.x = this.player.x + 1;
+            this.player.on.seen = true;
+            if (!this.seen.contains(this.player.on)) {
+                this.seen.add(this.player.on);
+            } 
+        }
     }
     
     //Search the graph
-    boolean graphSearch(Node n, GraphTraverseType<Node> func) {
-        Deque<Node> wl = new ArrayDeque<Node>();
-        ArrayList<Node> seen = new ArrayList<Node>();
-        func.add(wl, n);
-        
-        while (wl.size() != 0) {
-            Node cur = func.remove(wl);
+    void slowGraphSearch() {
+        this.wl = new ArrayDeque<Node>();
+        this.seen = new ArrayList<Node>();
+        this.gameStop = false;
+        this.wrongMoves = 0;
+        this.rightMoves = 0;
+        this.player = new Player(this.board.get(0));
+        for (Node n : this.board) {
+            n.seen = false;
+            n.solution = false;
+        }
+        func.add(this.wl, this.board.get(0));
+    }
+    
+    //Search the graph
+    boolean slowGraphSearchHelp() {        
+        if (this.wl.size() != 0) {
+            Node cur = this.func.remove(this.wl);
             if (cur.x == MazeWorld.WIDTH - 1 && cur.y == MazeWorld.HEIGHT - 1) {
+                cur.seen = true;
                 return true;
             }
-            
-            if (seen.contains(cur)) {
-                
-            }
+
+            if (this.seen.contains(cur)) { } 
             else {
                 for (Edge e : cur.edges) {
-                    func.add(wl, e.to);
+                    if (!this.seen.contains(e.to)) {
+                        this.func.add(this.wl, e.to);
+                    }
+                    
                 }
-                seen.add(cur);
+                if (!this.seen.contains(cur)) {
+                    this.seen.add(cur);
+                }
+
+                cur.seen = true;
             }
         }
         return false;
         
+    }
+    
+    //Calculates the solution to the maze
+    void determineSolution() {
+        ArrayList<Node> tempSeen = new ArrayList<Node>();
+        for (Node n : this.seen) {
+            int index = this.seen.indexOf(n);
+            for (int i = 0 ; i < index ; i++) {
+                tempSeen.add(this.seen.get(i));                
+            }
+            if (this.fastGraphSearch(n, tempSeen, this.func)) {
+                n.solution = true;
+                this.rightMoves++;
+            }
+            else {
+                this.wrongMoves++;
+            }
+            tempSeen = new ArrayList<Node>();
+        }
+    }
+    
+    //Search the graph completely
+    boolean fastGraphSearch(Node n, ArrayList<Node> seen, GraphTraverseType<Node> func) {
+        Deque<Node> wl = new ArrayDeque<Node>();
+        func.add(wl, n);
+        while (wl.size() != 0) {
+            Node cur = this.func.remove(wl);
+            if (cur.x == MazeWorld.WIDTH - 1 && cur.y == MazeWorld.HEIGHT - 1) {
+                return true;
+            }
+
+            if (seen.contains(cur)) { } 
+            else {
+                for (Edge e : cur.edges) {
+                    if (!seen.contains(e.to)) {
+                        this.func.add(wl, e.to);
+                    }                    
+                }
+                if (!seen.contains(cur)) {
+                    seen.add(cur);
+                }
+            }
+        }
+        return false;
+    }
+    
+    //Hide / show (toggle) the coloring of the seen nodes in the maze
+    void toggleColors() {
+        for (int i = 1 ; i < this.board.size() - 1 ; i++) {
+            this.board.get(i).isHidden = !this.board.get(i).isHidden;
+        }
+    }
+    
+    // Hide / show (toggle) the ending score screen
+    void toggleScore() {
+        this.showScore = !this.showScore;
+    }
+    
+    // If the maze has been solved display stats and end message
+    void drawEnd(WorldScene bg) {
+        bg.placeImageXY(new RectangleImage(MazeWorld.WIDTH * Node.CELL_SIZE, MazeWorld.HEIGHT * Node.CELL_SIZE,
+                OutlineMode.SOLID, Color.WHITE), 
+                MazeWorld.WIDTH * Node.CELL_SIZE / 2, MazeWorld.HEIGHT * Node.CELL_SIZE / 2);
+        bg.placeImageXY(new TextImage("Nice job!", MazeWorld.HEIGHT * Node.CELL_SIZE / 8, Color.RED), 
+                MazeWorld.WIDTH * Node.CELL_SIZE / 2, MazeWorld.HEIGHT * Node.CELL_SIZE / 8);
+        bg.placeImageXY(new TextImage("Took " + (this.rightMoves + this.wrongMoves) + " moves", 
+                MazeWorld.HEIGHT * Node.CELL_SIZE / 8, Color.RED), 
+                MazeWorld.WIDTH * Node.CELL_SIZE / 2, MazeWorld.HEIGHT * Node.CELL_SIZE / 2);
+        bg.placeImageXY(new TextImage("" + this.wrongMoves + "wrong moves",
+                MazeWorld.HEIGHT * Node.CELL_SIZE / 8, Color.RED), 
+                MazeWorld.WIDTH * Node.CELL_SIZE / 2, MazeWorld.HEIGHT * Node.CELL_SIZE / 4 * 3);
     }
     
     // Render the game
@@ -264,22 +359,30 @@ class MazeWorld extends World {
         if (player != null) {
             this.player.drawPlayer(bg);
         }
+        if (this.gameStop && this.showScore) {
+            this.drawEnd(bg);
+        }
 
         return bg;
     }
     
     // onTick
     public void onTick() {
-        if (this.player.hasPlayerWon()) {
-            this.onKeyEvent("r");
+        if (this.wl.size() != 0 && 
+                !this.board.get(MazeWorld.WIDTH * MazeWorld.HEIGHT - 1).seen) {
+            this.slowGraphSearchHelp();
         }
+        if (this.board.get(MazeWorld.WIDTH * MazeWorld.HEIGHT - 1).seen && !this.gameStop) {
+            this.determineSolution();
+            this.gameStop = true;
+            this.showScore = true;
+        }        
     }
     
     // onKey
     public void onKeyEvent(String ke) {
         if (ke.equals("r")) {
-            this.createMaze();
-            this.createPlayer();
+            this.reset();
         }
         else if (ke.equals("left")) {
             if (this.player.canMoveLeft()) {
@@ -302,14 +405,18 @@ class MazeWorld extends World {
             }
         }
         else if (ke.equals("b")) {
-            if (this.graphSearch(this.board.get(0), new BFS<Node>())) {
-                System.out.println("BooYeah!");
-            }
+            this.func = new BFS<Node>();
+            this.slowGraphSearch();
         }
         else if (ke.equals("d")) {
-            if (this.graphSearch(this.board.get(0), new DFS<Node>())) {
-                System.out.println("BooYeah! DFS");
-            }
+            this.func = new DFS<Node>();
+            this.slowGraphSearch();
+        }
+        else if (ke.equals("h")) {
+            this.toggleColors();
+        }
+        else if (ke.equals("j")) {
+            this.toggleScore();
         }
         else {
             return ;
