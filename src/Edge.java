@@ -1,11 +1,4 @@
-import java.util.ArrayList;
 import java.util.Random;
-
-import tester.*;
-import javalib.impworld.*;
-import java.awt.Color;
-import javalib.worldimages.*;
-
 
 //Represents an edge of a graph
 class Edge {

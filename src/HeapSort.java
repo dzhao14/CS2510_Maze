@@ -45,21 +45,26 @@ public class HeapSort<T> {
                     if (comp.compare(list.get(rightChild), list.get(leftChild)) > 0) {
                         this.swap(list, i, rightChild);
                         i = rightChild;
-                    } else {
+                    } 
+                    else {
                         this.swap(list, i, leftChild);
                         i = leftChild;
                     }
-                } else if (comp.compare(list.get(i), list.get(leftChild)) < 0) {
+                } 
+                else if (comp.compare(list.get(i), list.get(leftChild)) < 0) {
                     this.swap(list, i, leftChild);
                     i = leftChild;
-                } else {
+                } 
+                else {
                     this.swap(list, i, rightChild);
                     i = rightChild;
                 }
-            } else if (leftChild == e) {
+            } 
+            else if (leftChild == e) {
                 if (comp.compare(list.get(i), list.get(leftChild)) >= 0) {
                     return;
-                } else {
+                } 
+                else {
                     this.swap(list, i, leftChild);
                     i = leftChild;
                 }
@@ -84,9 +89,26 @@ class CompareEdges implements Comparator<Edge> {
     public int compare(Edge e1, Edge e2) {
         if (e1.weight < e2.weight) {
             return -1;
-        } else if (e1.weight == e2.weight) {
+        } 
+        else if (e1.weight == e2.weight) {
             return 0;
-        } else {
+        } 
+        else {
+            return 1;
+        }
+    }
+}
+
+class CompareInt implements Comparator<Integer> {
+    // Compare int1 to int2
+    public int compare(Integer i1, Integer i2) {
+        if (i1 < i2) {
+            return -1;
+        }
+        else if (i1 == i2) {
+            return 0;
+        }
+        else {
             return 1;
         }
     }

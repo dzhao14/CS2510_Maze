@@ -1,0 +1,297 @@
+Design for the maze game!
+
+Class Edge:
+
+  Represents a one-directional link between two nodes.
+
+Fields:
+
+Node from;
+  The starting point of the edge
+  
+Node to;
+  The end point of the edge
+  
+int weight;
+  The weight of the edge. Is a randomly generated integer during runtime
+
+Random rand;
+  A random number generator
+
+
+Class Node:
+  
+  Represents a square in the maze.
+
+static final int CELL_SIZE;
+  Represents the height and width of the square when drawn
+
+int x; int y;
+  Represents the x,y coordinate position of the node on the WorldScene
+
+ArrayList<Edge> edges;
+  Stores the number of edges that start from this node and go to another node.
+
+boolean seen;
+  Stores whether the player has visited this node or if the computer solving algorithm has visited this node
+
+boolean solution;
+  Stores whether this cell is a part of the path that solves the maze
+
+boolean isHidden;
+  Stores whether to draw or not draw this cell
+
+Methods:
+
+void drawNode(WorldScene bg);
+  Draw this node on to the given background
+
+WorldImage determineEdge(Edge e);
+  Return a white line image that'll connect a node with another node.
+
+WorldImage determineRect();
+  Return the correct type of square color based on the squares location and the boolean identifiers this node
+  currently has. The start square is always blue. The end square is always green. Seen cells are cyan and 
+  solution cells are pink
+
+
+Class HeapSort<T>:
+  
+  Represents an object that can heap sort a given List<T> with the given Comparator<T>
+
+Methods:
+
+List<T> heapSort(List<T> list, Comparator<T> comp);
+  HeapSorts the given list with the given comparator
+
+void buildHeap(List<T> list, Comparator<T> comp);
+  Takes a list and creates a heap by downheaping the first half of the elements in the list.
+
+void swap(List<T> list, int i1, int i2);
+  Swaps the item in the i1 index with the item in the i2 index of the list
+
+void downHeap(int i, List<T> list, Comparator<T> comp, int e);
+  Down heaps the element in index i of the list from index i to index e. e represents the last index in the list
+
+void heapOrder(List<T> list, Comparator<T> comp);
+  Creates a sorted list by removing the first element in the list and adding it to the end and then downheaping the first element
+  that replaced the previous first element
+
+
+class CompareEdges implements Comparator<Edge>:
+  
+  Represents a comparator object for comparing two Edges
+
+Methods:
+
+int compare(Edge e1, Edge e2);
+  Compares the weights of the two given edges. If e1's weight is less than e2's weight return -1. If their weights are equal 
+  return 0 and return 1 if e1's weight is greater than e2's weight
+
+
+Class Player:
+
+  Represents the player that exists in this maze game
+
+Fields:
+
+int x; int y;
+  Stores the x,y coordinates of the player on the board
+
+Node on;
+  Stores the node on which this player stands on
+
+Methods:
+
+boolean canMoveUp();
+  Checks if the player can move up a square
+
+boolean canMoveDown();
+  Checks if the player can move down a square
+
+boolean canMoveLeft();
+  Checks if the player can move left a square
+
+boolean canMoveRight()
+  Checks if the player can move right a square
+
+void drawPlayer(WorldScene bg);
+  Draws the player on the background
+
+boolean hasPlayerWon();
+  Checks if the player is standing on the finish square of the maze
+
+
+Class MazeWorld extends World:
+
+  Represents the maze game!
+
+Fields:
+
+static final int HEIGHT; static final int WIDTH;
+  Stores the height and width of the maze in units of squares
+
+ArrayList<Node> board;
+  Stores all the nodes that exist in this maze
+
+Player player;
+  Stores the player that exists on this board
+
+Deque<Node> wl;
+  Is a worklist that stores the Nodes that need to be visited by the computer maze solver
+
+ArrayList<Node> seen;
+  Stores the nodes seen by the player or seen by the computer solver
+
+GraphTraverseType<Node> func;
+  Stores the function object that chooses whether the solver uses bfs or dfs
+
+boolean gameStop;
+  Stores whether the game has been solved
+
+int wrongMoves;
+  Stores the number of wrong moves taken during this game. Going over the same wrong square more than
+  once doesn't add to this score
+
+int rightMoves;
+  Stores the number of right moves taken during this game to solve the maze. Going over the same right 
+  square more than once won't add to this score
+
+boolean showScore;
+  Stores whether or not to show the final ending screen
+
+Methods:
+
+void reset();
+  Resets all the fields in this class such that it is ready for another mazegame generation
+
+ArrayList<ArrayList<Node>> createNodeTable();
+  Creates a table of nodes. ALl nodes contain no links
+
+ArrayList<ArrayList<Node>> linkNodeTable(ArrayList<ArrayList<Node>> table);
+  Link all the nodes with its adjacent neighbors. Since Edges are one-directional we only link
+  a node with its left node and bottom node if possible
+
+ArrayList<Edge> sortEdges(ArrayList<ArrayList<Node>> table);
+  Creates a list of edges from the given table and then sorts the list of by weight from lowest to highest
+
+ArrayList<Edge> createMinSpanningTree(ArrayList<Edge> l, ArrayList<ArrayList<Node>> table);
+  Sets all the nodes in the table to be unlinked once again. Then runs kruskal's algortihm on the given,
+  sorted list of edges
+
+void Union(HashMap<Node, Node> map, Edge e);
+  Update this hashMap which stores the groups for union find when a connection is made (e)
+
+Node determineHead(HashMap<Node, Node> map, Node n);
+  returns the leader of the group
+
+ArrayList<Node> updateNodeEdges(ArrayList<ArrayList<Node>> table, ArrayList<Edge> edges);
+  Takes a table of unconnected nodes and a list of edges that went through kruskal's algorithm
+  and links the nodes in the table with the edges in the given list. Finally we turn the table
+  nodes into an arraylist of nodes
+
+ArrayList<Node> table2List(ArrayList<ArrayList<Node>> table);
+  Turns a table of nodes into an arraylist of nodes
+
+void createMaze()
+  Calls all the maze board creating functions from the start. Mutates this.board to store the 
+  newly created maze
+
+void createPlayer()
+  mutates this.player and creates a new player at the starting location 0, 0
+
+void movePlayerUp();
+  Moves the player up a square if and only if the player can move up and the computer solver isn't running
+  updates the seen list when the player visits an unseen node
+
+void movePlayerDown();
+  Moves the player up a square if and only if the player can move down and the computer solver isn't running
+  updates the seen list when the player visits an unseen node
+
+void movePlayerLeft();
+  Moves the player up a square if and only if the player can move left and the computer solver isn't running
+  updates the seen list when the player visits an unseen node
+
+void movePlayerRight();
+  Moves the player up a square if and only if the player can move right and the computer solver isn't running
+  updates the seen list when the player visits an unseen node
+
+void slowGraphSearch();
+  Runs one iteration of bfs or dfs (whichever is chosen) on each tick
+
+boolean slowGraphSearchHelp();
+  Is either bfs or dfs (based on this.func) except it only does bfs/dfs one node at a time so the user
+  can see the solver in action. If the end square is found returns true otherwise false. Updates the seen
+  and worklist along the way
+
+void determineSolution();
+  Once the game has been solved we calcaulte the solution path by retracing our steps through the maze.
+  mutates the this.solution field to true in all nodes that are a part of the solution path.
+
+boolean fastGraphSearch();
+  bfs or dfs based on this.func. Returns true if end square is found otherwise it returns false
+
+void toggleColors();
+  Mutates the isHidden field in the nodes so that the nodes are either drawn as defualt white squares or 
+  their drawn with the normal color determining function
+
+void toggleSCore();
+  Removes or shows the ending score screen after the game has been solved
+
+void drawEnd(WorldScene bg);
+  Draws the end score screen on top of the maze when the maze has been solved
+  Score screen contains number of nodes visited in total, and number of wrong nodes visited
+
+WorldScene makeScene();
+  Draws the mazeGame
+
+void onTick();
+  On every tick checks if the game is solved, checks if there are more nodes in the worklist that the computer
+  solver needs to search, and checks if the player has won or not
+
+void onKeyEvent(String ke);
+  Applies the neccessary functions based on the given key. Arrow keys move the player if the player is allowed
+  to move. B and D start the computer solvers. H hides the node colors. J hides the score screen. R resets the maze
+
+
+Interface GraphTraverseType<T>:
+  
+  Represents a function object that is used when doing graph traversing
+
+Methods:
+
+void add(Deque<T> wl, T item);
+  add the item to the list
+
+T remove(Deque<T> wl);
+  remove the first item from the list
+
+
+Class BFS<T> implements GraphTraverseType<T>:
+
+  A BFS graph traversing function object
+
+Methods:
+
+void add(Deque<T> wl, T item);
+  Add the item to the front of the deque
+
+T remove(Deque<T> wl);
+  Remove the last item from the deque
+
+
+Class DFS<T> implements GraphTraverseType<T>:
+  
+  A DFS graph traversing function object
+  
+Methods:
+
+void add (Deque<T> wl, T item);
+  Add the item to the front of the deque
+
+T remove(Deque<T> wl);
+  Remove the first item from the deque
+
+
+
+

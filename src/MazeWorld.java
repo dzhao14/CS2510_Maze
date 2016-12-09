@@ -13,9 +13,9 @@ import javalib.worldimages.TextImage;
 class MazeWorld extends World {
     
     // the total height of the maze in pixels 
-    static final int HEIGHT = 10;
+    static final int HEIGHT = 60;
     // the total width of the maze in pixels
-    static final int WIDTH = 10;
+    static final int WIDTH = 100;
     
     //A list of nodes that represent the maze
     ArrayList<Node> board;
@@ -30,10 +30,12 @@ class MazeWorld extends World {
     GraphTraverseType<Node> func = new DFS<Node>();
     // Stores whether the maze has been solved AND the solution path has been shown
     boolean gameStop = false;
-    // Stores the number of wrong moves taken during this game. Going over the same wrong square more than
+    // Stores the number of wrong moves taken during this game. 
+    // Going over the same wrong square more than
     // once doesn't add to this score.
     int wrongMoves = 0;
-    // Stores the number of right moves taken during this game to solve the maze. Going over the same right square
+    // Stores the number of right moves taken during this game to solve the maze. 
+    // Going over the same right square
     // more than once won't add to this score.
     int rightMoves = 0;
     // Stores whether or not to show the score screen when the maze is finished
@@ -49,6 +51,7 @@ class MazeWorld extends World {
         // this constructor is used for testing, to avoid generating a new maze each time
     }
     
+    //Reset
     void reset() {
         this.createMaze();
         this.player = new Player(this.board.get(0));
@@ -259,8 +262,7 @@ class MazeWorld extends World {
                 return true;
             }
 
-            if (this.seen.contains(cur)) { } 
-            else {
+            if (!this.seen.contains(cur)) {
                 for (Edge e : cur.edges) {
                     if (!this.seen.contains(e.to)) {
                         this.func.add(this.wl, e.to);
@@ -307,8 +309,7 @@ class MazeWorld extends World {
                 return true;
             }
 
-            if (seen.contains(cur)) { } 
-            else {
+            if (!seen.contains(cur)) { 
                 for (Edge e : cur.edges) {
                     if (!seen.contains(e.to)) {
                         this.func.add(wl, e.to);
@@ -336,10 +337,12 @@ class MazeWorld extends World {
     
     // If the maze has been solved display stats and end message
     void drawEnd(WorldScene bg) {
-        bg.placeImageXY(new RectangleImage(MazeWorld.WIDTH * Node.CELL_SIZE, MazeWorld.HEIGHT * Node.CELL_SIZE,
+        bg.placeImageXY(new RectangleImage(MazeWorld.WIDTH * Node.CELL_SIZE, 
+                MazeWorld.HEIGHT * Node.CELL_SIZE,
                 OutlineMode.SOLID, Color.WHITE), 
                 MazeWorld.WIDTH * Node.CELL_SIZE / 2, MazeWorld.HEIGHT * Node.CELL_SIZE / 2);
-        bg.placeImageXY(new TextImage("Nice job!", MazeWorld.HEIGHT * Node.CELL_SIZE / 8, Color.RED), 
+        bg.placeImageXY(new TextImage("Nice job!", 
+                MazeWorld.HEIGHT * Node.CELL_SIZE / 8, Color.RED), 
                 MazeWorld.WIDTH * Node.CELL_SIZE / 2, MazeWorld.HEIGHT * Node.CELL_SIZE / 8);
         bg.placeImageXY(new TextImage("Took " + (this.rightMoves + this.wrongMoves) + " moves", 
                 MazeWorld.HEIGHT * Node.CELL_SIZE / 8, Color.RED), 
@@ -376,6 +379,7 @@ class MazeWorld extends World {
             this.determineSolution();
             this.gameStop = true;
             this.showScore = true;
+            this.wl = new ArrayDeque<Node>();
         }        
     }
     
@@ -460,11 +464,3 @@ class DFS<T> implements GraphTraverseType<T> {
         return wl.removeFirst();
     }
 }
-
-
-
-
-
-
-
-
